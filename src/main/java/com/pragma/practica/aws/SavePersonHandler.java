@@ -15,23 +15,21 @@ public class SavePersonHandler implements RequestHandler<PersonRequest, PersonRe
 
     private DynamoDB dynamoDb;
     private String DYNAMODB_TABLE_NAME = "Person";
-    private Regions REGION = Regions.US_WEST_2;
+    private Regions REGION = Regions.US_EAST_1;
 
     public PersonResponse handleRequest(PersonRequest personRequest, Context context) {
-
         this.initDynamoDbClient();
-
         persistData(personRequest);
-
-        PersonResponse personResponse = new PersonResponse();
-        personResponse.setMessage("Saved Successfully!!!");
-        return personResponse;
+        return PersonResponse.builder()
+                .message("Saved Successfully!!!")
+                .build();
     }
 
     private PutItemOutcome persistData(PersonRequest personRequest) throws ConditionalCheckFailedException {
         return this.dynamoDb.getTable(DYNAMODB_TABLE_NAME)
                 .putItem(
                         new PutItemSpec().withItem(new Item()
+                                .withString("id", personRequest.getId())
                                 .withString("firstName", personRequest.getFirstName())
                                 .withString("lastName", personRequest.getLastName())
                         )
