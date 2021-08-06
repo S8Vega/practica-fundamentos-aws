@@ -18,7 +18,7 @@ public class Person {
     private int age;
     private String birthCity;
 
-    public static class Atributos {
+    public static class Attributes {
         public static final String ID = "id";
         public static final String FIRST_NAME = "firstName";
         public static final String LAST_NAME = "lastName";
@@ -27,7 +27,7 @@ public class Person {
         public static final String AGE = "age";
         public static final String BIRTH_CITY = "birthCity";
 
-        Atributos() {
+        Attributes() {
             throw new IllegalStateException("Utility class");
         }
     }
