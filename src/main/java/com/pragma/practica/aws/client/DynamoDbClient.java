@@ -6,6 +6,8 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.document.*;
 import com.amazonaws.services.dynamodbv2.document.spec.PutItemSpec;
 import com.amazonaws.services.dynamodbv2.document.spec.ScanSpec;
+import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec;
+import com.amazonaws.services.dynamodbv2.document.utils.ValueMap;
 import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException;
 import com.pragma.practica.aws.Person;
 
@@ -63,6 +65,28 @@ public class DynamoDbClient {
             );
         }
         return persons;
+    }
+
+    public void update(Person person) {
+        ValueMap attributes = new ValueMap();
+        attributes.put(":fn", person.getFirstName());
+        attributes.put(":ln", person.getLastName());
+        attributes.put(":it", person.getIdentificationType());
+        attributes.put(":in", person.getIdentificationNumber());
+        attributes.put(":a", person.getAge());
+        attributes.put(":b", person.getBirthCity());
+        String updateExpression = "set " +
+                Person.Attributes.FIRST_NAME + " = :fn, " +
+                Person.Attributes.LAST_NAME + " = :ln, " +
+                Person.Attributes.IDENTIFICATION_TYPE + " = :it, " +
+                Person.Attributes.IDENTIFICATION_NUMBER + " = :in, " +
+                Person.Attributes.AGE + " = :a, " +
+                Person.Attributes.BIRTH_CITY + " = :b";
+        UpdateItemSpec updateItemSpec = new UpdateItemSpec()
+                .withPrimaryKey(Person.Attributes.ID, person.getId())
+                .withUpdateExpression(updateExpression)
+                .withValueMap(attributes);
+        getTable().updateItem(updateItemSpec);
     }
 
 }
