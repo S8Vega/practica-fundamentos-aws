@@ -89,4 +89,8 @@ public class DynamoDbClient {
         getTable().updateItem(updateItemSpec);
     }
 
+    public void delete(Person person) {
+        getTable().deleteItem(Person.Attributes.ID, person.getId());
+    }
+
 }
