@@ -11,9 +11,7 @@ import com.amazonaws.services.dynamodbv2.document.utils.ValueMap;
 import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException;
 import com.pragma.practica.aws.Person;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 public class DynamoDbClient {
 
@@ -48,24 +46,9 @@ public class DynamoDbClient {
     public List<Person> getAll() {
         Table table = getTable();
         ItemCollection<ScanOutcome> items = table.scan(new ScanSpec());
-        Iterator<Item> iter = items.iterator();
-        List<Person> persons = new ArrayList<>();
-        while (iter.hasNext()) {
-            Item item = iter.next();
-            persons.add(
-                    Person.builder()
-                            .id(item.getString(Person.Attributes.ID))
-                            .firstName(item.getString(Person.Attributes.FIRST_NAME))
-                            .lastName(item.getString(Person.Attributes.LAST_NAME))
-                            .identificationType(item.getString(Person.Attributes.IDENTIFICATION_TYPE))
-                            .identificationNumber(item.getString(Person.Attributes.IDENTIFICATION_NUMBER))
-                            .age(item.getInt(Person.Attributes.AGE))
-                            .birthCity(item.getString(Person.Attributes.BIRTH_CITY))
-                            .build()
-            );
-        }
-        return persons;
+        return getPersonList(items.iterator());
     }
+
 
     public void update(Person person) {
         ValueMap attributes = new ValueMap();
@@ -91,6 +74,49 @@ public class DynamoDbClient {
 
     public void delete(Person person) {
         getTable().deleteItem(Person.Attributes.ID, person.getId());
+    }
+
+    public Person getByIdentification(String type, String number) {
+
+        String conditionExpression = "#it = :it and #in = :in";
+
+        Map<String, String> nameMap = new HashMap<>();
+        nameMap.put("#it", Person.Attributes.IDENTIFICATION_TYPE);
+        nameMap.put("#in", Person.Attributes.IDENTIFICATION_NUMBER);
+
+        Map<String, Object> valueMap = new HashMap<>();
+        valueMap.put(":it", type);
+        valueMap.put(":in", number);
+
+        ScanSpec scanSpec = new ScanSpec()
+                .withFilterExpression(conditionExpression)
+                .withNameMap(nameMap)
+                .withValueMap(valueMap);
+
+        ItemCollection<ScanOutcome> items = getTable().scan(scanSpec);
+
+        List<Person> persons = getPersonList(items.iterator());
+        if (persons.isEmpty()) return Person.builder().build();
+        return persons.get(0);
+    }
+
+    private List<Person> getPersonList(Iterator<Item> iter) {
+        List<Person> persons = new ArrayList<>();
+        while (iter.hasNext()) {
+            Item item = iter.next();
+            persons.add(
+                    Person.builder()
+                            .id(item.getString(Person.Attributes.ID))
+                            .firstName(item.getString(Person.Attributes.FIRST_NAME))
+                            .lastName(item.getString(Person.Attributes.LAST_NAME))
+                            .identificationType(item.getString(Person.Attributes.IDENTIFICATION_TYPE))
+                            .identificationNumber(item.getString(Person.Attributes.IDENTIFICATION_NUMBER))
+                            .age(item.getInt(Person.Attributes.AGE))
+                            .birthCity(item.getString(Person.Attributes.BIRTH_CITY))
+                            .build()
+            );
+        }
+        return persons;
     }
 
 }
