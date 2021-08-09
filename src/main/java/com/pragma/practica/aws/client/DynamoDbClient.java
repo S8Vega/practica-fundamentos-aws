@@ -100,6 +100,26 @@ public class DynamoDbClient {
         return persons.get(0);
     }
 
+    public List<Person> getByAge(int age) {
+
+        String conditionExpression = "#a >= :a";
+
+        Map<String, String> nameMap = new HashMap<>();
+        nameMap.put("#a", Person.Attributes.AGE);
+
+        Map<String, Object> valueMap = new HashMap<>();
+        valueMap.put(":a", age);
+
+        ScanSpec scanSpec = new ScanSpec()
+                .withFilterExpression(conditionExpression)
+                .withNameMap(nameMap)
+                .withValueMap(valueMap);
+
+        ItemCollection<ScanOutcome> items = getTable().scan(scanSpec);
+
+        return getPersonList(items.iterator());
+    }
+
     private List<Person> getPersonList(Iterator<Item> iter) {
         List<Person> persons = new ArrayList<>();
         while (iter.hasNext()) {
